@@ -1,0 +1,16 @@
+public class NombreClase{
+void hazAlgo(int x , double f){
+}
+private int x1 ,y ,z;
+protected double ejemplo(int x, double w, double n) 
+{ 
+int x, v,z, f, g, h;
+double f,g;
+int x;
+}
+double f ,g , h;
+
+private void ejemplo2(int x) {
+f=1*x;
+}
+}

@@ -1,0 +1,13 @@
+
+public class Test {
+  private int a;
+  public double b;
+  public int myMetodo(int a, float b) {
+    int x,y,z;
+    x=d*4.43-(f+(3.4-b*a));
+    z=x;
+    y=z*3
+  }
+
+  protected double myMetodo() {}
+}
