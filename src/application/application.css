@@ -1,10 +1,97 @@
-/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+/* Application styles */
 
-#line-numbers .scroll-pane {
-    -fx-hbar-policy : never;
-    -fx-vbar-policy : never;
+.root {
+    -fx-font-family: 'FiraCode Nerd Font', monospace;
 }
 
-TextAreas {
-    -fx-tab-max-width: 4;
+/* Menu styling */
+.menu-bar {
+    -fx-background-color: #21252b;
+    -fx-text-fill: white;
+}
+
+.menu-bar .label {
+    -fx-text-fill: #abb2bf;
+}
+
+.menu-bar .menu:hover, .menu-bar .menu:showing {
+    -fx-background-color: #323842;
+}
+
+.menu-item {
+    -fx-background-color: #21252b;
+}
+
+.menu-item .label {
+    -fx-text-fill: #abb2bf;
+}
+
+.menu-item:hover, .menu-item:focused {
+    -fx-background-color: #4d78cc;
+}
+
+/* Line numbers */
+#line-numbers {
+    -fx-font-family: 'FiraCode Nerd Font', monospace;
+    -fx-background-color: #21252b;
+    -fx-text-fill: #5c6370;
+    -fx-border-width: 0;
+    -fx-highlight-fill: transparent;
+    -fx-highlight-text-fill: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* Text area styling */
+.text-area {
+    -fx-font-family: 'FiraCode Nerd Font', monospace;
+    -fx-background-color: #282c34;
+    -fx-text-fill: #abb2bf;
+    -fx-highlight-fill: #3e4452;
+    -fx-highlight-text-fill: #abb2bf;
+}
+
+.text-area .content {
+    -fx-background-color: #282c34;
+}
+
+.text-area:focused .content {
+    -fx-background-color: #282c34;
+}
+
+/* Terminal area styling */
+.scroll-pane {
+    -fx-background: #21252b;
+    -fx-border-color: #181a1f;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .scroll-bar:vertical,
+.scroll-pane .scroll-bar:horizontal {
+    -fx-background-color: #1c1f24;
+}
+
+.scroll-pane .scroll-bar:vertical .thumb,
+.scroll-pane .scroll-bar:horizontal .thumb {
+    -fx-background-color: #4d5562;
+}
+
+/* Split pane */
+.split-pane {
+    -fx-background-color: #21252b;
+    -fx-padding: 0;
+}
+
+.split-pane:horizontal > .split-pane-divider,
+.split-pane:vertical > .split-pane-divider {
+    -fx-background-color: #181a1f;
+    -fx-padding: 0 1 0 1;
+}
+
+/* For proper font rendering */
+* {
+    -fx-font-smoothing-type: gray;
 }
