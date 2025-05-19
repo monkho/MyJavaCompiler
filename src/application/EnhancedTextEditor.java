@@ -41,7 +41,8 @@ public class EnhancedTextEditor extends Application {
     private final String TYPE_COLOR = "#e5c07b";
     private final String TERMINAL_BG = "#21252b";
 
-    @Override
+    @SuppressWarnings("exports")
+	@Override
     public void start(Stage primaryStage) {
         // Setup scrollable container for terminal output
         ScrollPane terminalScroll = new ScrollPane(terminalArea);
@@ -229,35 +230,49 @@ public class EnhancedTextEditor extends Application {
     }
     
     private void executeFile(Stage stage) throws UnsupportedEncodingException {
-        ANTLRInputStream input = null;
-        String s = textArea.getText();
-        @SuppressWarnings("deprecation")
-        StringBufferInputStream str = new StringBufferInputStream(s);
         try {
-            input = new ANTLRInputStream(str);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        
-        sintaxLexer lexer = new sintaxLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        
-        CustomParser2 parser = new CustomParser2(tokens);
-        
-        try {
-            parser.program();
-        } catch (RecognitionException e) {
+            ANTLRInputStream input = null;
+            String s = textArea.getText();
+            @SuppressWarnings("deprecation")
+            StringBufferInputStream str = new StringBufferInputStream(s);
+            try {
+                input = new ANTLRInputStream(str);
+            } catch (IOException ex) {
+                addTerminalText("Error al crear el flujo de entrada: ", Color.RED);
+                addTerminalText(ex.getMessage() + "\n", Color.WHITE);
+                ex.printStackTrace();
+                return;
+            }
+            
+            sintaxLexer lexer = new sintaxLexer(input);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            
+            CustomParser2 parser = new CustomParser2(tokens);
+            
+            try {
+                parser.program();
+            } catch (RecognitionException e) {
+                addTerminalText("Error de reconocimiento: ", Color.RED);
+                addTerminalText(e.getMessage() + "\n", Color.WHITE);
+                e.printStackTrace();
+            } catch (Exception e) {
+                addTerminalText("Error no esperado: ", Color.RED);
+                addTerminalText(e.getMessage() + "\n", Color.WHITE);
+                e.printStackTrace();
+            }
+            clearTerminal();
+            
+            // Process and highlight the output
+            String output = parser.textOutput;
+            processParserOutput(output);
+            
+            // After execution, re-highlight the code to show warnings/errors
+            highlightExecutionResults(parser.textOutput);
+        } catch (Exception e) {
+            addTerminalText("Error fatal en la ejecución: ", Color.RED);
+            addTerminalText(e.getMessage() + "\n", Color.WHITE);
             e.printStackTrace();
-            addTerminalText(e.getMessage(), Color.RED);
         }
-        clearTerminal();
-        
-        // Process and highlight the output
-        String output = parser.textOutput;
-        processParserOutput(output);
-        
-        // After execution, re-highlight the code to show warnings/errors
-        highlightExecutionResults(parser.textOutput);
     }
     
     private void processParserOutput(String output) {
@@ -371,24 +386,34 @@ public class EnhancedTextEditor extends Application {
         Matcher m = p.matcher(code);
         
         while (m.find()) {
-            textArea.setStyle(m.start(), m.end(), "-fx-fill: " + color + ";");
+            try {
+                textArea.setStyle(m.start(), m.end(), "-fx-fill: " + color + ";");
+            } catch (Exception e) {
+                System.err.println("Error highlighting pattern: " + pattern + " at position " + m.start() + "-" + m.end());
+                e.printStackTrace();
+            }
         }
     }
     
     private void highlightCurrentLine() {
-        int caretPosition = textArea.getCaretPosition();
-        String text = textArea.getText();
-        
-        // Find the start of the line
-        int lineStart = text.lastIndexOf('\n', caretPosition - 1) + 1;
-        if (lineStart < 0) lineStart = 0;
-        
-        // Find the end of the line
-        int lineEnd = text.indexOf('\n', caretPosition);
-        if (lineEnd < 0) lineEnd = text.length();
-        
-        // Apply background color to the current line
-        textArea.setLineBackground(lineStart, lineEnd, LINE_HIGHLIGHT_COLOR);
+        try {
+            int caretPosition = textArea.getCaretPosition();
+            String text = textArea.getText();
+            
+            // Find the start of the line
+            int lineStart = text.lastIndexOf('\n', caretPosition - 1) + 1;
+            if (lineStart < 0) lineStart = 0;
+            
+            // Find the end of the line
+            int lineEnd = text.indexOf('\n', caretPosition);
+            if (lineEnd < 0) lineEnd = text.length();
+            
+            // Apply background color to the current line
+            textArea.setLineBackground(lineStart, lineEnd, LINE_HIGHLIGHT_COLOR);
+        } catch (Exception e) {
+            System.err.println("Error highlighting current line");
+            e.printStackTrace();
+        }
     }
     
     private void applyDarkTheme() {
@@ -435,22 +460,33 @@ public class EnhancedTextEditor extends Application {
         
         public void setStyle(int start, int end, String style) {
             if (end <= getLength()) {
-                setStyle(start, end-1, "-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + "; " + style);
+                // Use the parent TextArea's setStyle method to avoid recursion
+                super.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + "; " + style);
             }
         }
         
         public void setLineBackground(int start, int end, String color) {
-            if (end <= getLength()) {
-                String currentStyle = this.getStyle();
-                this.setStyle("-fx-highlight-fill: " + color + "; -fx-highlight-text-fill: " + textColor + ";");
-                this.selectRange(start, end);
-                this.setStyle(currentStyle);
-                this.deselect();
+            try {
+                if (end <= getLength()) {
+                    String currentStyle = this.getStyle();
+                    super.setStyle("-fx-highlight-fill: " + color + "; -fx-highlight-text-fill: " + textColor + ";");
+                    this.selectRange(start, end);
+                    super.setStyle(currentStyle);
+                    this.deselect();
+                }
+            } catch (Exception e) {
+                System.err.println("Error setting line background");
+                e.printStackTrace();
             }
         }
         
         public void resetStyles() {
-            this.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + ";");
+            try {
+                super.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + ";");
+            } catch (Exception e) {
+                System.err.println("Error resetting styles");
+                e.printStackTrace();
+            }
         }
     }
 }
