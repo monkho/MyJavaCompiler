@@ -1,0 +1,85 @@
+/* syntax-highlighting.css */
+
+/* Base styling for the code area */
+.code-area {
+    -fx-font-family: 'FiraCode Nerd Font', monospace;
+    -fx-font-size: 12px;
+}
+
+/* Dark theme syntax highlight colors */
+.keyword {
+    -fx-fill: #c678dd;
+    -fx-font-weight: bold;
+}
+.string {
+    -fx-fill: #98c379;
+}
+.comment {
+    -fx-fill: #5c6370;
+    -fx-font-style: italic;
+}
+.number {
+    -fx-fill: #d19a66;
+}
+.method {
+    -fx-fill: #61afef;
+}
+.type {
+    -fx-fill: #e5c07b;
+}
+
+/* Line numbers styles */
+.lineno {
+    -fx-background-color: #21252b;
+    -fx-text-fill: #5c6370;
+    -fx-font-family: 'JetBrains Mono', monospace;
+    -fx-font-size: 12px;
+    -fx-padding: 0 5px;
+    -fx-text-alignment: right;
+}
+
+/* Execution result highlighting */
+.reducible {
+    -fx-fill: #4CAF50;
+    -fx-underline: true;
+}
+.dynamic {
+    -fx-fill: #FF9800;
+    -fx-underline: true;
+}
+.error {
+    -fx-fill: #F44336;
+    -fx-underline: true;
+}
+
+/* Paragraph box - entire line */
+.paragraph-box:has-caret {
+    -fx-background-color: #2c313c;
+}
+
+/* Light theme overrides - applied when light theme is active */
+.light-theme .keyword {
+    -fx-fill: #7c0c89;
+}
+.light-theme .string {
+    -fx-fill: #008000;
+}
+.light-theme .comment {
+    -fx-fill: #808080;
+}
+.light-theme .number {
+    -fx-fill: #b05000;
+}
+.light-theme .method {
+    -fx-fill: #0068b5;
+}
+.light-theme .type {
+    -fx-fill: #815900;
+}
+.light-theme .lineno {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #757575;
+}
+.light-theme .paragraph-box:has-caret {
+    -fx-background-color: #e8e8e8;
+}

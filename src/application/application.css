@@ -1,97 +1,85 @@
-/* Application styles */
+/* syntax-highlighting.css */
 
-.root {
+/* Base styling for the code area */
+.code-area {
     -fx-font-family: 'FiraCode Nerd Font', monospace;
+    -fx-font-size: 12px;
 }
 
-/* Menu styling */
-.menu-bar {
-    -fx-background-color: #21252b;
-    -fx-text-fill: white;
+/* Dark theme syntax highlight colors */
+.keyword {
+    -fx-fill: #c678dd;
+    -fx-font-weight: bold;
+}
+.string {
+    -fx-fill: #98c379;
+}
+.comment {
+    -fx-fill: #5c6370;
+    -fx-font-style: italic;
+}
+.number {
+    -fx-fill: #d19a66;
+}
+.method {
+    -fx-fill: #61afef;
+}
+.type {
+    -fx-fill: #e5c07b;
 }
 
-.menu-bar .label {
-    -fx-text-fill: #abb2bf;
-}
-
-.menu-bar .menu:hover, .menu-bar .menu:showing {
-    -fx-background-color: #323842;
-}
-
-.menu-item {
-    -fx-background-color: #21252b;
-}
-
-.menu-item .label {
-    -fx-text-fill: #abb2bf;
-}
-
-.menu-item:hover, .menu-item:focused {
-    -fx-background-color: #4d78cc;
-}
-
-/* Line numbers */
-#line-numbers {
-    -fx-font-family: 'FiraCode Nerd Font', monospace;
+/* Line numbers styles */
+.lineno {
     -fx-background-color: #21252b;
     -fx-text-fill: #5c6370;
-    -fx-border-width: 0;
-    -fx-highlight-fill: transparent;
-    -fx-highlight-text-fill: transparent;
-    -fx-focus-color: transparent;
-    -fx-faint-focus-color: transparent;
+    -fx-font-family: 'JetBrains Mono', monospace;
+    -fx-font-size: 12px;
+    -fx-padding: 0 5px;
+    -fx-text-alignment: right;
 }
 
-/* Text area styling */
-.text-area {
-    -fx-font-family: 'FiraCode Nerd Font', monospace;
-    -fx-background-color: #282c34;
-    -fx-text-fill: #abb2bf;
-    -fx-highlight-fill: #3e4452;
-    -fx-highlight-text-fill: #abb2bf;
+/* Execution result highlighting */
+.reducible {
+    -fx-fill: #4CAF50;
+    -fx-underline: true;
+}
+.dynamic {
+    -fx-fill: #FF9800;
+    -fx-underline: true;
+}
+.error {
+    -fx-fill: #F44336;
+    -fx-underline: true;
 }
 
-.text-area .content {
-    -fx-background-color: #282c34;
+/* Paragraph box - entire line */
+.paragraph-box:has-caret {
+    -fx-background-color: #2c313c;
 }
 
-.text-area:focused .content {
-    -fx-background-color: #282c34;
+/* Light theme overrides - applied when light theme is active */
+.light-theme .keyword {
+    -fx-fill: #7c0c89;
 }
-
-/* Terminal area styling */
-.scroll-pane {
-    -fx-background: #21252b;
-    -fx-border-color: #181a1f;
+.light-theme .string {
+    -fx-fill: #008000;
 }
-
-.scroll-pane > .viewport {
-    -fx-background-color: transparent;
+.light-theme .comment {
+    -fx-fill: #808080;
 }
-
-.scroll-pane .scroll-bar:vertical,
-.scroll-pane .scroll-bar:horizontal {
-    -fx-background-color: #1c1f24;
+.light-theme .number {
+    -fx-fill: #b05000;
 }
-
-.scroll-pane .scroll-bar:vertical .thumb,
-.scroll-pane .scroll-bar:horizontal .thumb {
-    -fx-background-color: #4d5562;
+.light-theme .method {
+    -fx-fill: #0068b5;
 }
-
-/* Split pane */
-.split-pane {
-    -fx-background-color: #21252b;
-    -fx-padding: 0;
+.light-theme .type {
+    -fx-fill: #815900;
 }
-
-.split-pane:horizontal > .split-pane-divider,
-.split-pane:vertical > .split-pane-divider {
-    -fx-background-color: #181a1f;
-    -fx-padding: 0 1 0 1;
+.light-theme .lineno {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #757575;
 }
-
-/* For proper font rendering */
-* {
-    -fx-font-smoothing-type: gray;
+.light-theme .paragraph-box:has-caret {
+    -fx-background-color: #e8e8e8;
 }

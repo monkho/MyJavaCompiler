@@ -6,6 +6,8 @@ module tst {
 	
 	requires transitive jdk.unsupported;
 	requires antlr;
+	requires org.fxmisc.richtext;
+	requires java.desktop;
 
 	exports application;
 	

@@ -13,11 +13,26 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.concurrent.Task;
 import javafx.stage.FileChooser;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+
 import java.io.*;
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.swing.text.Document;
 
 import org.antlr.runtime.ANTLRInputStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -25,58 +40,126 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenStream;
 
 public class EnhancedTextEditor extends Application {
-    private CodeArea textArea = new CodeArea();
+    private CodeArea codeArea;
     private TextFlow terminalArea = new TextFlow();
-    private TextArea lineNumbers = new TextArea();
     private File currentFile = null;
-    // Theme colors
-    private final String BACKGROUND_COLOR = "#282c34";
-    private final String TEXT_COLOR = "#abb2bf";
-    private final String LINE_HIGHLIGHT_COLOR = "#2c313c";
-    private final String KEYWORD_COLOR = "#c678dd";
-    private final String STRING_COLOR = "#98c379";
-    private final String COMMENT_COLOR = "#5c6370";
-    private final String NUMBER_COLOR = "#d19a66";
-    private final String METHOD_COLOR = "#61afef";
-    private final String TYPE_COLOR = "#e5c07b";
-    private final String TERMINAL_BG = "#21252b";
+    private ExecutorService executor;
+    
+    // Theme colors - Dark theme (default)
+    private static final String DARK_BG_COLOR = "#282c34";
+    private static final String DARK_TEXT_COLOR = "#abb2bf";
+    private static final String DARK_LINE_HIGHLIGHT = "#2c313c";
+    private static final String DARK_TERMINAL_BG = "#f0f0f0";
+    private static final String DARK_LINE_NUMBER_BG = "#21252b";
+    private static final String DARK_LINE_NUMBER_FG = "#5c6370";
+    
+    // Light theme
+    private static final String LIGHT_BG_COLOR = "#f5f5f5";
+    private static final String LIGHT_TEXT_COLOR = "#333333";
+    private static final String LIGHT_LINE_HIGHLIGHT = "#e8e8e8";
+    private static final String LIGHT_TERMINAL_BG = "#f0f0f0";
+    private static final String LIGHT_LINE_NUMBER_BG = "#e0e0e0";
+    private static final String LIGHT_LINE_NUMBER_FG = "#757575";
+    
+    // Current theme state
+    private boolean isDarkTheme = false;
+    
+    // Syntax colors - Dark theme
+    private static final String KEYWORD_COLOR_DARK = "#c678dd";
+    private static final String STRING_COLOR_DARK = "#98c379";
+    private static final String COMMENT_COLOR_DARK = "#5c6370";
+    private static final String NUMBER_COLOR_DARK = "#d19a66";
+    private static final String METHOD_COLOR_DARK = "#61afef";
+    private static final String TYPE_COLOR_DARK = "#e5c07b";
+    
+    // Syntax colors - Light theme
+    private static final String KEYWORD_COLOR_LIGHT = "#7c0c89";
+    private static final String STRING_COLOR_LIGHT = "#008000";
+    private static final String COMMENT_COLOR_LIGHT = "#808080";
+    private static final String NUMBER_COLOR_LIGHT = "#b05000";
+    private static final String METHOD_COLOR_LIGHT = "#0068b5";
+    private static final String TYPE_COLOR_LIGHT = "#815900";
+
+    // Special highlighting for execution results
+    private static final String REDUCIBLE_COLOR = "#4CAF50";
+    private static final String DYNAMIC_COLOR = "#FF9800";
+    private static final String ERROR_COLOR = "#F44336";
+    
+    private static final String[] KEYWORDS = new String[] {
+            "abstract", "assert", "boolean", "break", "byte",
+            "case", "catch", "char", "class", "const",
+            "continue", "default", "do", "double", "else",
+            "enum", "extends", "final", "finally", "float",
+            "for", "goto", "if", "implements", "import",
+            "instanceof", "int", "interface", "long", "native",
+            "new", "package", "private", "protected", "public",
+            "return", "short", "static", "strictfp", "super",
+            "switch", "synchronized", "this", "throw", "throws",
+            "transient", "try", "void", "volatile", "while", "var"
+    };
+
+    private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
+    private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
+    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
+    private static final String NUMBER_PATTERN = "\\b\\d+(\\.\\d+)?([fd])?\\b";
+    private static final String METHOD_PATTERN = "\\b[a-zA-Z_][a-zA-Z0-9_]*(?=\\s*\\()";
+    private static final String TYPE_PATTERN = "\\b[A-Z][a-zA-Z0-9_]*\\b";
+
+    private static final Pattern PATTERN = Pattern.compile(
+            "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
+            + "|(?<STRING>" + STRING_PATTERN + ")"
+            + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
+            + "|(?<NUMBER>" + NUMBER_PATTERN + ")"
+            + "|(?<METHOD>" + METHOD_PATTERN + ")"
+            + "|(?<TYPE>" + TYPE_PATTERN + ")"
+    );
+    
+    // Highlighting patterns for execution results
+    private Pattern reduciblePattern = Pattern.compile("REDUCIBLE EXPRESSION: ([^\\n]+)");
+    private Pattern dynamicPattern = Pattern.compile("DYNAMIC EXPRESSION: ([^\\n]+)");
+    private Pattern errorPattern = Pattern.compile("ERROR: ([^\\n]+)");
 
     @SuppressWarnings("exports")
 	@Override
     public void start(Stage primaryStage) {
+        // Initialize thread pool for background tasks
+        executor = Executors.newSingleThreadExecutor();
+        
+        // Initialize code area with syntax highlighting
+        codeArea = new CodeArea();
+        codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea, digits -> "%1$" + digits + "s", null, null));
+        codeArea.setStyle("-fx-font-family: 'FiraCode Nerd Font', monospace; -fx-font-size: 12px; color: #eee");
+        
+        // Delayed syntax highlighting
+        codeArea.multiPlainChanges()
+                .successionEnds(Duration.ofMillis(200))
+                .retainLatestUntilLater(executor)
+                .supplyTask(this::computeHighlightingAsync)
+                .awaitLatest(codeArea.multiPlainChanges())
+                .filterMap(t -> {
+                    if (t.isSuccess()) {
+                        return Optional.of(t.get());
+                    } else {
+                        t.getFailure().printStackTrace();
+                        return Optional.empty();
+                    }
+                })
+                .subscribe(this::applyHighlighting);
+
+        // Setup scrollable container for code area
+        VirtualizedScrollPane<CodeArea> codeScrollPane = new VirtualizedScrollPane<>(codeArea);
+        
         // Setup scrollable container for terminal output
         ScrollPane terminalScroll = new ScrollPane(terminalArea);
         terminalScroll.setFitToWidth(true);
         terminalScroll.setFitToHeight(true);
-        terminalScroll.setStyle("-fx-background-color: " + TERMINAL_BG + ";");
         
         // Terminal area styling
         terminalArea.setPadding(new Insets(10));
-        terminalArea.setStyle("-fx-background-color: " + TERMINAL_BG + ";");
         
-        // Configure line numbers
-        lineNumbers.setEditable(false);
-        lineNumbers.setStyle("-fx-background-color: #21252b; -fx-text-fill: #5c6370;");
-        lineNumbers.setFont(Font.font("JetBrains Mono", 12));
-        lineNumbers.setPrefWidth(40);
-        lineNumbers.setId("line-numbers");
+        // Apply initial theme
+        applyTheme(isDarkTheme);
 
-        // Configure text editor area
-        textArea.setFont(Font.font("JetBrains Mono", 12));
-        textArea.setEditable(true);
-        
-        // Set theme
-        textArea.setBackgroundColor(BACKGROUND_COLOR);
-        textArea.setTextColor(TEXT_COLOR);
-        
-        // Synchronize line numbers with text area
-        textArea.textProperty().addListener((_, _, newText) -> {
-            updateLineNumbers(newText);
-            highlightSyntax();
-        });
-        textArea.caretPositionProperty().addListener((_, _, _) -> highlightCurrentLine());
-        textArea.scrollTopProperty().addListener((_, _, newVal) -> lineNumbers.setScrollTop(newVal.doubleValue()));
-        
         // File menu
         Menu fileMenu = new Menu("Archivo");
         MenuItem openItem = new MenuItem("Abrir (ctrl+o)");
@@ -94,8 +177,15 @@ public class EnhancedTextEditor extends Application {
         MenuItem lightThemeItem = new MenuItem("Claro");
         themeMenu.getItems().addAll(darkThemeItem, lightThemeItem);
         
-        darkThemeItem.setOnAction(_ -> applyDarkTheme());
-        lightThemeItem.setOnAction(_ -> applyLightTheme());
+        darkThemeItem.setOnAction(_ -> {
+            isDarkTheme = true;
+            applyTheme(true);
+        });
+        
+        lightThemeItem.setOnAction(_ -> {
+            isDarkTheme = false;
+            applyTheme(false);
+        });
         
         fileMenu.getItems().addAll(openItem, saveItem, saveAsItem, new SeparatorMenuItem(), exitItem);
         runMenu.getItems().addAll(execItem, new SeparatorMenuItem(), clearTerminalItem);
@@ -103,7 +193,10 @@ public class EnhancedTextEditor extends Application {
         openItem.setOnAction(_ -> openFile(primaryStage));
         saveItem.setOnAction(_ -> saveFile(primaryStage, false));
         saveAsItem.setOnAction(_ -> saveFile(primaryStage, true));
-        exitItem.setOnAction(_ -> primaryStage.close());
+        exitItem.setOnAction(_ -> {
+            executor.shutdown();
+            primaryStage.close();
+        });
         execItem.setOnAction(_ -> {
             try {
                 executeFile(primaryStage);
@@ -115,19 +208,13 @@ public class EnhancedTextEditor extends Application {
 
         MenuBar menuBar = new MenuBar();
         menuBar.getMenus().addAll(fileMenu, runMenu, themeMenu);
-        menuBar.setStyle("-fx-background-color: #21252b; -fx-text-fill: white;");
-
-        // Contenedor del área de texto con números de línea
-        HBox textContainer = new HBox(lineNumbers, textArea);
-        HBox.setHgrow(textArea, Priority.ALWAYS);
-        HBox.setHgrow(lineNumbers, Priority.NEVER);
 
         SplitPane splitPane = new SplitPane();
         splitPane.setOrientation(javafx.geometry.Orientation.VERTICAL);
-        splitPane.getItems().addAll(textContainer, terminalScroll);
-        splitPane.setDividerPositions(0.7); // Inicialmente, 70% para el área de texto
+        splitPane.getItems().addAll(codeScrollPane, terminalScroll);
+        splitPane.setDividerPositions(0.7); // 70% for code area initially
 
-        // Layout principal con márgenes
+        // Layout principal
         VBox layout = new VBox(0);
         VBox.setVgrow(splitPane, Priority.ALWAYS);
         
@@ -135,6 +222,7 @@ public class EnhancedTextEditor extends Application {
         
         Scene scene = new Scene(layout, 800, 600);
         
+        // Keyboard shortcuts
         scene.getAccelerators().put(
             new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN),
             () -> saveFile(primaryStage, false)
@@ -166,14 +254,39 @@ public class EnhancedTextEditor extends Application {
             () -> clearTerminal()
         );
         
+        // Load CSS stylesheets
         scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("syntax-highlighting.css").toExternalForm());
+        
         primaryStage.setTitle("Editor de Código Avanzado");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+    
+    @Override
+    public void stop() {
+        executor.shutdown();
+    }
+
+    private void applyTheme(boolean dark) {
+        String bgColor = dark ? DARK_BG_COLOR : LIGHT_BG_COLOR;
+        String textColor = dark ? DARK_TEXT_COLOR : LIGHT_TEXT_COLOR;
+        String terminalBg = dark ? DARK_TERMINAL_BG : LIGHT_TERMINAL_BG;
         
-        // Initial highlighting
+        codeArea.setStyle(String.format(
+            "-fx-font-family: 'FiraCode Nerd Font', monospace; " +
+            "-fx-font-size: 12px; " +
+            "-fx-background-color: %s; " +
+            "-fx-text-fill: %s;",
+            bgColor, textColor
+        ));
+        
+        terminalArea.setStyle("-fx-background-color: " + terminalBg + ";");
+        if(terminalArea.getParent() != null)
+        	terminalArea.getParent().setStyle("-fx-background-color: " + terminalBg + ";");
+        
+        // Rehighlight to apply new theme colors
         highlightSyntax();
-        highlightCurrentLine();
     }
 
     private void openFile(Stage stage) {
@@ -188,9 +301,7 @@ public class EnhancedTextEditor extends Application {
         if (file != null) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String content = reader.lines().collect(Collectors.joining("\n"));
-                textArea.setText(content);
-                updateLineNumbers(content);
-                highlightSyntax();
+                codeArea.replaceText(content);
                 currentFile = file;
                 addTerminalText("Archivo cargado: ", Color.WHITE);
                 addTerminalText(file.getName() + "\n\n", Color.LIGHTGREEN);
@@ -218,7 +329,7 @@ public class EnhancedTextEditor extends Application {
         }
         
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentFile))) {
-            writer.write(textArea.getText());
+            writer.write(codeArea.getText());
             addTerminalText("Archivo guardado: ", Color.WHITE);  
             addTerminalText(currentFile.getName() + "\n\n", Color.LIGHTGREEN);
         } 
@@ -232,7 +343,7 @@ public class EnhancedTextEditor extends Application {
     private void executeFile(Stage stage) throws UnsupportedEncodingException {
         try {
             ANTLRInputStream input = null;
-            String s = textArea.getText();
+            String s = codeArea.getText();
             @SuppressWarnings("deprecation")
             StringBufferInputStream str = new StringBufferInputStream(s);
             try {
@@ -266,7 +377,7 @@ public class EnhancedTextEditor extends Application {
             String output = parser.textOutput;
             processParserOutput(output);
             
-            // After execution, re-highlight the code to show warnings/errors
+            // After execution, highlight special expressions
             highlightExecutionResults(parser.textOutput);
         } catch (Exception e) {
             addTerminalText("Error fatal en la ejecución: ", Color.RED);
@@ -303,33 +414,37 @@ public class EnhancedTextEditor extends Application {
     }
     
     private void highlightExecutionResults(String output) {
-        // Find REDUCIBLE EXPRESSIONS and highlight them
-        Pattern reduciblePattern = Pattern.compile("REDUCIBLE EXPRESSION: ([^\\n]+)");
-        Matcher reducibleMatcher = reduciblePattern.matcher(output);
+        // Find and mark special expressions in the code
+        String code = codeArea.getText();
         
+        // Find REDUCIBLE EXPRESSIONS and highlight them
+        Matcher reducibleMatcher = reduciblePattern.matcher(output);
         while (reducibleMatcher.find()) {
             String expr = reducibleMatcher.group(1).trim();
-            highlightExpression(expr, "#4CAF50"); // Green for reducible
+            highlightSpecialExpression(expr, "reducible");
         }
         
         // Find DYNAMIC EXPRESSIONS and highlight them
-        Pattern dynamicPattern = Pattern.compile("DYNAMIC EXPRESSION: ([^\\n]+)");
         Matcher dynamicMatcher = dynamicPattern.matcher(output);
-        
         while (dynamicMatcher.find()) {
             String expr = dynamicMatcher.group(1).trim();
-            highlightExpression(expr, "#FF9800"); // Orange for dynamic
+            highlightSpecialExpression(expr, "dynamic");
         }
         
-        // Re-highlight syntax to ensure all colors are applied correctly
-        highlightSyntax();
+        // Find ERROR expressions and highlight them
+        Matcher errorMatcher = errorPattern.matcher(output);
+        while (errorMatcher.find()) {
+            String expr = errorMatcher.group(1).trim();
+            highlightSpecialExpression(expr, "error");
+        }
     }
     
-    private void highlightExpression(String expr, String color) {
-        String text = textArea.getText();
-        int startIndex = text.indexOf(expr);
-        if (startIndex >= 0) {
-            textArea.setStyle(startIndex, startIndex + expr.length(), "-fx-underline: true; -fx-underline-color: " + color + ";");
+    private void highlightSpecialExpression(String expr, String styleClass) {
+        String code = codeArea.getText();
+        int index = code.indexOf(expr);
+        if (index >= 0) {
+            // Add special style class to the expression
+            codeArea.setStyleClass(index, index + expr.length(), styleClass);
         }
     }
     
@@ -340,154 +455,86 @@ public class EnhancedTextEditor extends Application {
     private void addTerminalText(String text, Color color) {
         Text textNode = new Text(text);
         textNode.setFill(color);
-        textNode.setFont(Font.font("JetBrains Mono", 12));
+        textNode.setFont(Font.font("FiraCode Nerd Font", 12));
         terminalArea.getChildren().add(textNode);
     }
-
-    private void updateLineNumbers(String content) {
-        StringBuilder numbers = new StringBuilder();
-        int lineCount = content.split("\n", -1).length;
-        for (int i = 1; i <= lineCount; i++) {
-            numbers.append(i).append("\n");
+    
+    private StyleSpans<Collection<String>> computeHighlighting(String text) {
+        Matcher matcher = PATTERN.matcher(text);
+        int lastKwEnd = 0;
+        StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
+        
+        while(matcher.find()) {
+            String styleClass = 
+                  matcher.group("KEYWORD") != null ? "keyword"
+                : matcher.group("STRING") != null ? "string"
+                : matcher.group("COMMENT") != null ? "comment"
+                : matcher.group("NUMBER") != null ? "number"
+                : matcher.group("METHOD") != null ? "method"
+                : matcher.group("TYPE") != null ? "type"
+                : null;
+            
+            assert styleClass != null;
+            
+            spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
+            spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
+            lastKwEnd = matcher.end();
         }
-        lineNumbers.setText(numbers.toString());
+        spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
+        return spansBuilder.create();
     }
     
-    private void highlightSyntax() {
-        String code = textArea.getText();
-        textArea.resetStyles();
+    private Task<StyleSpans<Collection<String>>> computeHighlightingAsync() {
+        String text = codeArea.getText();
         
-        // Reset all styling
-        textArea.setStyle(0, code.length(), "");
-        
-        // Highlight Java keywords
-        highlightPattern("\\b(public|private|protected|class|void|int|double|float|if|else|for|while|return|static|final|new)\\b", KEYWORD_COLOR);
-        
-        // Highlight strings
-        highlightPattern("\"[^\"]*\"", STRING_COLOR);
-        
-        // Highlight numbers
-        highlightPattern("\\b\\d+(\\.\\d+)?([fd])?\\b", NUMBER_COLOR);
-        
-        // Highlight methods
-        highlightPattern("\\b[a-zA-Z_][a-zA-Z0-9_]*(?=\\s*\\()", METHOD_COLOR);
-        
-        // Highlight types/classes
-        highlightPattern("\\b[A-Z][a-zA-Z0-9_]*\\b", TYPE_COLOR);
-        
-        // Highlight comments
-        highlightPattern("//.*$", COMMENT_COLOR);
-        highlightPattern("/\\*[\\s\\S]*?\\*/", COMMENT_COLOR);
-    }
-    
-    private void highlightPattern(String pattern, String color) {
-        String code = textArea.getText();
-        Pattern p = Pattern.compile(pattern, Pattern.MULTILINE);
-        Matcher m = p.matcher(code);
-        
-        while (m.find()) {
-            try {
-                textArea.setStyle(m.start(), m.end(), "-fx-fill: " + color + ";");
-            } catch (Exception e) {
-                System.err.println("Error highlighting pattern: " + pattern + " at position " + m.start() + "-" + m.end());
-                e.printStackTrace();
+        return new Task<StyleSpans<Collection<String>>>() {
+            protected StyleSpans<Collection<String>> call() throws Exception {
+                return computeHighlighting(text);
             }
+        };
+    }
+    
+    private void applyHighlighting(StyleSpans<Collection<String>> highlighting) {
+        codeArea.setStyleSpans(0, highlighting);
+    }
+    
+//    private void computeHighlightingAsync(Document document, int offset) {
+//        new Thread(() -> {
+//            try {
+//                // Example logic: simulate a computation delay
+//                Thread.sleep(100); // Simulate processing delay
+//
+//                // Perform highlighting logic (placeholder)
+//                // For example: parse text and apply styles based on syntax
+//
+//                String text = document.getText(0, document.getLength());
+//
+//                // Example: dummy highlight logic (replace with real syntax analysis)
+//                if (text.contains("public")) {
+//                    // Apply style to "public" keywords (pseudocode)
+//                    // SwingUtilities.invokeLater to update UI
+//                }
+//
+//                // You could call a method like:
+//                // applyHighlighting(document, highlights);
+//
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }).start();
+//    }
+
+
+    private void highlightSyntax() {
+        String text = codeArea.getText();
+        if (text != null && !text.isEmpty()) {
+            StyleSpans<Collection<String>> highlighting = computeHighlighting(text);
+            codeArea.setStyleSpans(0, highlighting);
         }
     }
-    
-    private void highlightCurrentLine() {
-        try {
-            int caretPosition = textArea.getCaretPosition();
-            String text = textArea.getText();
-            
-            // Find the start of the line
-            int lineStart = text.lastIndexOf('\n', caretPosition - 1) + 1;
-            if (lineStart < 0) lineStart = 0;
-            
-            // Find the end of the line
-            int lineEnd = text.indexOf('\n', caretPosition);
-            if (lineEnd < 0) lineEnd = text.length();
-            
-            // Apply background color to the current line
-            textArea.setLineBackground(lineStart, lineEnd, LINE_HIGHLIGHT_COLOR);
-        } catch (Exception e) {
-            System.err.println("Error highlighting current line");
-            e.printStackTrace();
-        }
-    }
-    
-    private void applyDarkTheme() {
-        textArea.setBackgroundColor(BACKGROUND_COLOR);
-        textArea.setTextColor(TEXT_COLOR);
-        lineNumbers.setStyle("-fx-background-color: #21252b; -fx-text-fill: #5c6370;");
-        terminalArea.setStyle("-fx-background-color: " + TERMINAL_BG + ";");
-        highlightSyntax();
-    }
-    
-    private void applyLightTheme() {
-        textArea.setBackgroundColor("#f5f5f5");
-        textArea.setTextColor("#333333");
-        lineNumbers.setStyle("-fx-background-color: #e0e0e0; -fx-text-fill: #757575;");
-        terminalArea.setStyle("-fx-background-color: #f0f0f0;");
-        highlightSyntax();
-    }
-    
+
     public static void main(String[] args) {
         launch(args);
-    }
-    
-    /**
-     * Extended TextArea class with syntax highlighting capabilities
-     */
-    private class CodeArea extends TextArea {
-        private String backgroundColor = BACKGROUND_COLOR;
-        private String textColor = TEXT_COLOR;
-        
-        public CodeArea() {
-            super();
-            this.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + ";");
-        }
-        
-        public void setBackgroundColor(String color) {
-            this.backgroundColor = color;
-            this.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + ";");
-        }
-        
-        public void setTextColor(String color) {
-            this.textColor = color;
-            this.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + ";");
-        }
-        
-        public void setStyle(int start, int end, String style) {
-            if (end <= getLength()) {
-                // Use the parent TextArea's setStyle method to avoid recursion
-                super.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + "; " + style);
-            }
-        }
-        
-        public void setLineBackground(int start, int end, String color) {
-            try {
-                if (end <= getLength()) {
-                    String currentStyle = this.getStyle();
-                    super.setStyle("-fx-highlight-fill: " + color + "; -fx-highlight-text-fill: " + textColor + ";");
-                    this.selectRange(start, end);
-                    super.setStyle(currentStyle);
-                    this.deselect();
-                }
-            } catch (Exception e) {
-                System.err.println("Error setting line background");
-                e.printStackTrace();
-            }
-        }
-        
-        public void resetStyles() {
-            try {
-                super.setStyle("-fx-background-color: " + backgroundColor + "; -fx-text-fill: " + textColor + ";");
-            } catch (Exception e) {
-                System.err.println("Error resetting styles");
-                e.printStackTrace();
-            }
-        }
     }
 }
 
