@@ -196,6 +196,7 @@ public class SimpleTextEditor extends Application {
 			e.printStackTrace();
 			terminalArea.appendText(e.getMessage());
     	}
+    	clearTerminal(stage);
     	terminalArea.appendText(parser.textOutput);
     }
     
