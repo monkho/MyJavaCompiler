@@ -1,0 +1,10 @@
+class Test {
+	public void main() {
+		int a, b, c;
+		float h, y;
+		a = 5 * 3;
+		b = a - c * 10;
+		h = 8.9f - y;
+		
+	}
+}

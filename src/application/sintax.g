@@ -212,7 +212,7 @@ instruccion
 asignacion
     : ID '=' expr SEMICOLON
     {
-      String exp = $ID.text + '=' + $expr.text;
+      String exp = $ID.text + " = " + $expr.text;
       checkTypes(findId($ID.text), $expr.t, exp);
       
       // BTA: Guardamos si la expresión es estática (1) o dinámica (0)
@@ -221,10 +221,10 @@ asignacion
       // BTA: Informamos si la asignación es reducible o no
       if ($expr.isStatic == 1) {
         System.out.println("REDUCIBLE EXPRESSION: " + exp + " (Type: " + $expr.t + ", Static: " + $expr.isStatic + ")");
-        textOutput += "REDUCIBLE EXPRESSION: " + exp + "\n";
+        textOutput += "REDUCIBLE EXPRESSION: " + exp + " (Type: " + $expr.t + ", Static: " + $expr.isStatic + ")\n";
       } else {
         System.out.println("DYNAMIC EXPRESSION: " + exp + " (Type: " + $expr.t + ", Static: " + $expr.isStatic + ")");
-        textOutput += "DYNAMIC EXPRESSION: " + exp + "\n";
+        textOutput += "DYNAMIC EXPRESSION: " + exp + " (Type: " + $expr.t + ", Static: " + $expr.isStatic + ")\n";
       }
     }
     ;

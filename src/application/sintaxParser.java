@@ -1,4 +1,4 @@
-// $ANTLR 3.5.2 sintax.g 2025-05-18 22:21:55
+// $ANTLR 3.5.2 sintax.g 2025-05-19 13:23:02
 
 package application;
 import java.util.List;
@@ -813,7 +813,7 @@ public class sintaxParser extends Parser {
 
 			match(input,SEMICOLON,FOLLOW_SEMICOLON_in_asignacion293); 
 
-			      String exp = (ID5!=null?ID5.getText():null) + '=' + (expr6!=null?input.toString(expr6.start,expr6.stop):null);
+			      String exp = (ID5!=null?ID5.getText():null) + " = " + (expr6!=null?input.toString(expr6.start,expr6.stop):null);
 			      checkTypes(findId((ID5!=null?ID5.getText():null)), (expr6!=null?((sintaxParser.expr_return)expr6).t:0), exp);
 			      
 			      // BTA: Guardamos si la expresión es estática (1) o dinámica (0)
@@ -822,10 +822,10 @@ public class sintaxParser extends Parser {
 			      // BTA: Informamos si la asignación es reducible o no
 			      if ((expr6!=null?((sintaxParser.expr_return)expr6).isStatic:0) == 1) {
 			        System.out.println("REDUCIBLE EXPRESSION: " + exp + " (Type: " + (expr6!=null?((sintaxParser.expr_return)expr6).t:0) + ", Static: " + (expr6!=null?((sintaxParser.expr_return)expr6).isStatic:0) + ")");
-			        textOutput += "REDUCIBLE EXPRESSION: " + exp + "\n";
+			        textOutput += "REDUCIBLE EXPRESSION: " + exp + " (Type: " + (expr6!=null?((sintaxParser.expr_return)expr6).t:0) + ", Static: " + (expr6!=null?((sintaxParser.expr_return)expr6).isStatic:0) + ")\n";
 			      } else {
 			        System.out.println("DYNAMIC EXPRESSION: " + exp + " (Type: " + (expr6!=null?((sintaxParser.expr_return)expr6).t:0) + ", Static: " + (expr6!=null?((sintaxParser.expr_return)expr6).isStatic:0) + ")");
-			        textOutput += "DYNAMIC EXPRESSION: " + exp + "\n";
+			        textOutput += "DYNAMIC EXPRESSION: " + exp + " (Type: " + (expr6!=null?((sintaxParser.expr_return)expr6).t:0) + ", Static: " + (expr6!=null?((sintaxParser.expr_return)expr6).isStatic:0) + ")\n";
 			      }
 			    
 			}
