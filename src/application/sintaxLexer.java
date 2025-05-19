@@ -1,4 +1,4 @@
-// $ANTLR 3.5.2 sintax.g 2025-05-06 10:16:25
+// $ANTLR 3.5.2 sintax.g 2025-05-18 22:21:56
 
 package application;
 
@@ -280,8 +280,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = CONTAR;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:301:10: ( 'contar' )
-			// sintax.g:301:12: 'contar'
+			// sintax.g:366:10: ( 'contar' )
+			// sintax.g:366:12: 'contar'
 			{
 			match("contar"); 
 
@@ -301,8 +301,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = INT;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:302:10: ( 'int' )
-			// sintax.g:302:12: 'int'
+			// sintax.g:367:10: ( 'int' )
+			// sintax.g:367:12: 'int'
 			{
 			match("int"); 
 
@@ -322,8 +322,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = DOUBLE;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:303:10: ( 'double' )
-			// sintax.g:303:12: 'double'
+			// sintax.g:368:10: ( 'double' )
+			// sintax.g:368:12: 'double'
 			{
 			match("double"); 
 
@@ -343,8 +343,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = FLOAT;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:304:10: ( 'float' )
-			// sintax.g:304:12: 'float'
+			// sintax.g:369:10: ( 'float' )
+			// sintax.g:369:12: 'float'
 			{
 			match("float"); 
 
@@ -364,8 +364,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = VOID;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:305:10: ( 'void' )
-			// sintax.g:305:12: 'void'
+			// sintax.g:370:10: ( 'void' )
+			// sintax.g:370:12: 'void'
 			{
 			match("void"); 
 
@@ -385,8 +385,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = PUBLIC;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:306:10: ( 'public' )
-			// sintax.g:306:12: 'public'
+			// sintax.g:371:10: ( 'public' )
+			// sintax.g:371:12: 'public'
 			{
 			match("public"); 
 
@@ -406,8 +406,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = PRIVATE;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:307:10: ( 'private' )
-			// sintax.g:307:12: 'private'
+			// sintax.g:372:10: ( 'private' )
+			// sintax.g:372:12: 'private'
 			{
 			match("private"); 
 
@@ -427,8 +427,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = PROTECTED;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:308:10: ( 'protected' )
-			// sintax.g:308:12: 'protected'
+			// sintax.g:373:10: ( 'protected' )
+			// sintax.g:373:12: 'protected'
 			{
 			match("protected"); 
 
@@ -448,8 +448,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = SEMICOLON;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:309:10: ( ';' )
-			// sintax.g:309:12: ';'
+			// sintax.g:374:10: ( ';' )
+			// sintax.g:374:12: ';'
 			{
 			match(';'); 
 			}
@@ -468,8 +468,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = DOT;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:310:4: ( '.' )
-			// sintax.g:310:6: '.'
+			// sintax.g:375:4: ( '.' )
+			// sintax.g:375:6: '.'
 			{
 			match('.'); 
 			}
@@ -488,8 +488,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = ID;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:312:3: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
-			// sintax.g:312:5: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+			// sintax.g:377:3: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
+			// sintax.g:377:5: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
 			{
 			if ( (input.LA(1) >= 'A' && input.LA(1) <= 'Z')||input.LA(1)=='_'||(input.LA(1) >= 'a' && input.LA(1) <= 'z') ) {
 				input.consume();
@@ -499,7 +499,7 @@ public class sintaxLexer extends Lexer {
 				recover(mse);
 				throw mse;
 			}
-			// sintax.g:312:36: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+			// sintax.g:377:36: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
 			loop1:
 			while (true) {
 				int alt1=2;
@@ -544,8 +544,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = CFLOAT;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:313:7: ( CINT DOT CINT 'f' )
-			// sintax.g:313:9: CINT DOT CINT 'f'
+			// sintax.g:378:7: ( CINT DOT CINT 'f' )
+			// sintax.g:378:9: CINT DOT CINT 'f'
 			{
 			mCINT(); 
 
@@ -570,8 +570,8 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = CDOUBLE;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:314:8: ( CINT DOT CINT )
-			// sintax.g:314:10: CINT DOT CINT
+			// sintax.g:379:8: ( CINT DOT CINT )
+			// sintax.g:379:10: CINT DOT CINT
 			{
 			mCINT(); 
 
@@ -595,10 +595,10 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = CINT;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:315:5: ( ( '0' .. '9' )+ )
-			// sintax.g:315:7: ( '0' .. '9' )+
+			// sintax.g:380:5: ( ( '0' .. '9' )+ )
+			// sintax.g:380:7: ( '0' .. '9' )+
 			{
-			// sintax.g:315:7: ( '0' .. '9' )+
+			// sintax.g:380:7: ( '0' .. '9' )+
 			int cnt2=0;
 			loop2:
 			while (true) {
@@ -647,10 +647,10 @@ public class sintaxLexer extends Lexer {
 		try {
 			int _type = WS;
 			int _channel = DEFAULT_TOKEN_CHANNEL;
-			// sintax.g:317:4: ( ( ' ' | '\\n' | '\\t' | '\\r' )+ )
-			// sintax.g:317:7: ( ' ' | '\\n' | '\\t' | '\\r' )+
+			// sintax.g:382:4: ( ( ' ' | '\\n' | '\\t' | '\\r' )+ )
+			// sintax.g:382:7: ( ' ' | '\\n' | '\\t' | '\\r' )+
 			{
-			// sintax.g:317:7: ( ' ' | '\\n' | '\\t' | '\\r' )+
+			// sintax.g:382:7: ( ' ' | '\\n' | '\\t' | '\\r' )+
 			int cnt3=0;
 			loop3:
 			while (true) {
